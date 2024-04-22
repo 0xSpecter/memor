@@ -13,11 +13,26 @@ export default function BounchingBlock({ speedMultiplier = 1 }) {
     const ydir = useMotionValue(Math.random() > 0.5 ? 1 : -1)
     const yoffset = useMotionValue(rnd())
 
+    const width = useMotionValue(160)
+    const height = useMotionValue(160)
+
     const [bgColor, setBgColor] = useState(null)
     const [bounceCount, setBounceCount] = useState(0)
     const [display, setDisplay] = useState(false)
 
     const ref = useRef(null)
+
+    if (typeof window !== "undefined") {
+        useEffect(() => {
+            if (window.innerWidth < 768) {
+                width.set(100)
+                height.set(100)
+            } else {
+                width.set(160)
+                height.set(160)
+            }
+        }, [window.innerWidth])
+    }
 
 
     useEffect(() => {const inter = setInterval(() => {
@@ -45,7 +60,7 @@ export default function BounchingBlock({ speedMultiplier = 1 }) {
     return (
         <>
             <motion.div className="absolute w-40 h-40 rounded-xl  z-0 shadow-2xl opacity-35 ring-1 ring-black/10 backdrop-invert bg-transparent"
-                style={{ x, y,  }} // background: bgColor
+                style={{ x, y, width, height }} // background: bgColor
                 // whileHover={{ border: "2px solid rgba(255, 255, 255, 0.8)" }}
                 onClick={() => {
                     setDisplay(true)

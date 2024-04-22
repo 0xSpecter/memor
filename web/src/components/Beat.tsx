@@ -34,7 +34,7 @@ export default function Beat({ x, polltime, callback = null }) {
 
     return (
         <div className="absolute w-screen h-screen pointer-events-none overflow-hidden flex items-center justify-center">
-            <motion.div className="absolute m-auto border-2 border-white rounded-full w-1 h-1 bg-white/30"
+            <motion.div className="absolute m-auto mb-48 md:mb-0 border-2 border-white rounded-full w-1 h-1 bg-white/30"
                 style={{ width, height, opacity, borderWidth }}
             >
 

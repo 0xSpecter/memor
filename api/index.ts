@@ -7,6 +7,7 @@ const PORT = 8000;
 
 const app = express();
 app.use(cors())
+app.use(express.json())
 const server = createServer(app);
 const io = new Server(server, {
     cors: {
@@ -31,24 +32,34 @@ io.on("connection", socket => {
     })
 })
 
+app.get("/status/:room", (req, res) => {
+    if (!(req.params.room in rooms)) {
+        return res.send({exists: false, full: false}).status(200)
+    }
+
+    return res.send({
+        exists: true,
+        full: rooms[req.params.room].users.length - 1 >= rooms[req.params.room].playerCount
+    }).status(200)
+})
+
+app.get("/rooms", (req, res) => {return res.send(rooms).status(200)})
+
 app.post("/create", (req, res) => {
-    const room = req.body.room
+    const playerCount = req.body.playerCount
     const roomName = req.body.roomName
     const user_id = req.body.user_id
 
-    
-    if (room in rooms) {
-        res.send("room already exists").status(400)
-        return
-    }
+    const roomCode = Array.from({length: 4}, () => String.fromCharCode(Math.floor(Math.random() * 26) + 65)).join("")
 
-    rooms[room] = {
+    rooms[roomCode] = {
+        playerCount: playerCount,
         users: [user_id],
         roomName: roomName,
         gamestate: null
     }
 
-    res.send("updated").status(200)
+    res.send(roomCode).status(200)
 })
 
 app.get("/update/:room", (req, res) => {

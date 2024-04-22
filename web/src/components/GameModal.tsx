@@ -1,10 +1,38 @@
 "use client"
+import { createRoom, exists } from "@/api"
 import { motion, AnimatePresence } from "framer-motion"
 import { useState } from "react"
+import { uuid } from "uuidv4"
 
-export default function GameModal({ isDraggable, mode }) {
-    const [onlineType, setOnlineType] = useState(true)
+export default function GameModal({ isDraggable, mode, nickname }) {
+    const [onlineType, setOnlineType] = useState(true) // true for join, false for create
     const [roomCode, setRoomCode] = useState("")
+    
+    const [playerCount, setPlayerCount] = useState(2)
+    const [roomName, setRoomName] = useState("")
+
+    async function handleNewRoom() {
+        if (roomName.length === 0) {
+            alert("Room name cannot be empty")
+            return
+        }
+
+        if (localStorage.getItem("user_id") === null) {
+            localStorage.setItem("user_id", uuid())
+        }
+
+        createRoom(
+            playerCount, 
+            roomName, 
+            window.localStorage.getItem("user_id")
+        )
+            .then(res => res.text())
+            .then(roomCode => window.location.href = `/room/${roomCode}`)
+
+            .catch(err => {
+                alert(err)
+            })
+    }
     
     return (
         <>
@@ -45,17 +73,32 @@ export default function GameModal({ isDraggable, mode }) {
                                 <input className="outline-none bg-white/20 text-center rounded-md py-2 px-1 w-1/3" 
                                     type="text"
                                     value={roomCode}
-                                    onChange={e => e.target.value.length < 5 && setRoomCode(e.target.value)}
+                                    onChange={e => e.target.value.length < 5 && setRoomCode(e.target.value.toUpperCase())}
                                 />
                                 <AnimatePresence>
-                                    <motion.button className="text-2xl ring-2 ring-white p-1 rounded-md"
+                                    <motion.button className="relative text-2xl ring-2 ring-white p-1 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
                                         onClick={() => {
                                             if (roomCode.length !== 4) {
                                                 alert("Room code must be 4 characters")
                                                 return 
                                             }
-                                            window.location.href = `/room/${roomCode}`
+
+                                            exists(roomCode)
+                                                .then(res => res.json())
+                                                .then(res => {
+                                                    if (!res.exists) {
+                                                        alert("Room does not exist")
+                                                        return
+                                                    }
+                                                    if (res.full) {
+                                                        alert("Room is full")
+                                                        return
+                                                    }
+                                                    window.location.href = `/room/${roomCode}`
+                                                })
                                         }}
+
+                                        disabled={nickname.length === 0 || roomCode.length !== 4}
                                     >
                                         JOIN
                                     </motion.button>
@@ -63,7 +106,42 @@ export default function GameModal({ isDraggable, mode }) {
                             </div> 
                         </div>
                     :
-                        <div/>
+                        <div className="relative w-full h-2/3 px-2 flex flex-col items-start justify-around">
+                            <div className="flex flex-col gap-2 items-center justify-center px-10">
+                                <div className="flex flex-row gap-2 items-center jusitfy-center">
+                                    <span>
+                                        Player Count
+                                    </span>
+                                    <input className="outline-none bg-white/20 text-center rounded-md py-2 px-1 w-20" 
+                                        type="number"
+                                        value={playerCount}
+                                        onChange={e => {
+                                            let val = parseInt(e.target.value)
+
+                                            if (val > 8) val = 8
+                                            else if (val < 2) val = 2
+
+                                            setPlayerCount(val)
+                                        }}/>
+                                </div>
+
+                                <div className="flex flex-row gap-2 items-center jusitfy-center">
+                                    <span>
+                                        Room name
+                                    </span>
+                                    <input className="outline-none bg-white/20 text-center rounded-md py-2 px-1 w-1/2" 
+                                        type="text"
+                                        value={roomName}
+                                        onChange={e => setRoomName(e.target.value)}/>
+                                </div>
+
+                                <motion.button className="relative text-2xl ring-2 ring-white p-1 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                                        onClick={() => handleNewRoom()}
+                                    >
+                                        CREATE
+                                </motion.button>
+                            </div> 
+                        </div>
                     }
                 </motion.div>
             )}

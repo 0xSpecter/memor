@@ -1,5 +1,4 @@
 import { motion, useMotionValue } from "framer-motion"
-import { useEffect } from "react"
 
 export default function Xced({ color, strokeWidth = 4 }) {
     return (
