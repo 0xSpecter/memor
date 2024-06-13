@@ -23,8 +23,7 @@ export default function GameModal({ isDraggable, mode, nickname }) {
 
         createRoom(
             playerCount, 
-            roomName, 
-            window.localStorage.getItem("user_id")
+            roomName
         )
             .then(res => res.text())
             .then(roomCode => window.location.href = `/room/${roomCode}`)

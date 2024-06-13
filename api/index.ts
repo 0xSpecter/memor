@@ -22,9 +22,16 @@ app.get("/", (req, res) => {
 })
 
 io.on("connection", socket => {
-    socket.on("join", room_id => {
-        console.log(room_id)
-        socket.join(room_id)
+    socket.on("join", player => {
+        socket.join(player.room_id)
+        const alreadyJoined = rooms[player.room_id].users.findIndex(user => user[1] === player.identity[1])
+        if (alreadyJoined === -1) {
+            rooms[player.room_id].users.push(player.identity)
+        } else {
+            rooms[player.room_id].users[alreadyJoined] = player.identity
+        }
+
+        socket.emit("update", rooms[player.room_id])
     })
 
     socket.on("disconnect", () => {
@@ -33,13 +40,19 @@ io.on("connection", socket => {
 })
 
 app.get("/status/:room", (req, res) => {
-    if (!(req.params.room in rooms)) {
+    const room = req.params.room
+
+    if (!(room in rooms)) {
         return res.send({exists: false, full: false}).status(200)
     }
 
     return res.send({
         exists: true,
-        full: rooms[req.params.room].users.length - 1 >= rooms[req.params.room].playerCount
+        full: rooms[room].users.length - 1 >= rooms[room].playerCount,
+        maxPlayers: rooms[room].playerCount,
+        currentPlayers: rooms[room].users.length,
+        users: rooms[room].users,
+        name: rooms[room].roomName,
     }).status(200)
 })
 
@@ -48,13 +61,12 @@ app.get("/rooms", (req, res) => {return res.send(rooms).status(200)})
 app.post("/create", (req, res) => {
     const playerCount = req.body.playerCount
     const roomName = req.body.roomName
-    const user_id = req.body.user_id
 
     const roomCode = Array.from({length: 4}, () => String.fromCharCode(Math.floor(Math.random() * 26) + 65)).join("")
 
     rooms[roomCode] = {
         playerCount: playerCount,
-        users: [user_id],
+        users: [],
         roomName: roomName,
         gamestate: null
     }

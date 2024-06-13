@@ -1,8 +1,7 @@
 import { io } from "socket.io-client";
 
 
-export async function createRoom(playerCount : number, roomName : string, user_id : string) {
-    console.log(playerCount, roomName, user_id)
+export async function createRoom(playerCount : number, roomName : string) {
     return fetch("http://localhost:8000/create", {
         method: "POST",
         headers: {
@@ -11,7 +10,6 @@ export async function createRoom(playerCount : number, roomName : string, user_i
         body: JSON.stringify({
             playerCount: playerCount,
             roomName: roomName,
-            user_id: user_id
         })
     })
 }
